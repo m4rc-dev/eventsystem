@@ -1,24 +1,24 @@
 <?php
 include 'db.php';
 
-// Add participant
+// ADD
 if (isset($_POST['add'])) {
     $evCode = $_POST['evCode'];
-    $fName  = $_POST['fName'];
-    $lName  = $_POST['lName'];
-    $dRate  = $_POST['dRate'];
+    $fName = $_POST['fName'];
+    $lName = $_POST['lName'];
+    $dRate = $_POST['dRate'];
 
     $conn->query("INSERT INTO Participants (evCode, partFName, partLName, partDRate)
                   VALUES ('$evCode', '$fName', '$lName', '$dRate')");
 }
 
-// Edit participant
+// EDIT
 if (isset($_POST['edit'])) {
-    $id    = $_POST['id'];
+    $id = $_POST['id'];
     $evCode = $_POST['evCode'];
-    $fName  = $_POST['fName'];
-    $lName  = $_POST['lName'];
-    $dRate  = $_POST['dRate'];
+    $fName = $_POST['fName'];
+    $lName = $_POST['lName'];
+    $dRate = $_POST['dRate'];
 
     $conn->query("UPDATE Participants SET
                     evCode='$evCode',
@@ -28,43 +28,41 @@ if (isset($_POST['edit'])) {
                   WHERE partID=$id");
 }
 
-// Delete
+// DELETE
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     $conn->query("DELETE FROM Participants WHERE partID=$id");
 }
 
-// Edit mode
+// EDIT MODE
 $edit_mode = false;
 $edit_part = null;
 if (isset($_GET['edit'])) {
     $edit_mode = true;
     $id = $_GET['edit'];
-    $res = $conn->query("SELECT * FROM Participants WHERE partID=$id");
-    $edit_part = $res->fetch_assoc();
+    $edit_part = $conn->query("SELECT * FROM Participants WHERE partID=$id")->fetch_assoc();
 }
 
-// Search
+// SEARCH
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 if ($search != "") {
     $parts = $conn->query("SELECT * FROM Participants
                            WHERE partFName LIKE '%$search%' 
-                              OR partLName LIKE '%$search%'
-                           ORDER BY partID ASC");
+                              OR partLName LIKE '%$search%'");
 } else {
-    $parts = $conn->query("SELECT * FROM Participants ORDER BY partID ASC");
+    $parts = $conn->query("SELECT * FROM Participants");
 }
 
-// Events dropdown
-$events = $conn->query("SELECT evCode, evName FROM Events ORDER BY evName ASC");
+$events = $conn->query("SELECT * FROM Events");
 ?>
 <!DOCTYPE html>
 <html>
-<head><title>Participants Management</title></head>
+<head><title>Participants</title></head>
 <body>
 
 <?php if ($edit_mode && $edit_part): ?>
 <h2>Edit Participant</h2>
+
 <form method="post">
     <input type="hidden" name="id" value="<?= $edit_part['partID'] ?>">
 
@@ -72,33 +70,36 @@ $events = $conn->query("SELECT evCode, evName FROM Events ORDER BY evName ASC");
     <select name="evCode">
         <option value="">-- none --</option>
         <?php while ($e = $events->fetch_assoc()): ?>
-        <option value="<?= $e['evCode'] ?>" <?= $edit_part['evCode'] == $e['evCode'] ? "selected" : "" ?>>
-            <?= $e['evName'] ?> (<?= $e['evCode'] ?>)
+        <option value="<?= $e['evCode'] ?>" <?= $edit_part['evCode']==$e['evCode']?'selected':'' ?>>
+            <?= $e['evName'] ?>
         </option>
         <?php endwhile; ?>
     </select><br>
 
     FIRST NAME: <input type="text" name="fName" value="<?= $edit_part['partFName'] ?>" required><br>
-    LAST NAME : <input type="text" name="lName" value="<?= $edit_part['partLName'] ?>" required><br>
-    DISCOUNT RATE (e.g. 0.10): <input type="number" step="0.01" name="dRate" value="<?= $edit_part['partDRate'] ?>"><br>
+    LAST NAME: <input type="text" name="lName" value="<?= $edit_part['partLName'] ?>" required><br>
+    DISCOUNT RATE: <input type="number" step="0.01" name="dRate" value="<?= $edit_part['partDRate'] ?>"><br>
 
-    <button type="submit" name="edit">Update Participant</button>
+    <button type="submit" name="edit">Update</button>
     <a href="participants.php">Cancel</a>
 </form>
 
 <?php else: ?>
 <h2>Add Participant</h2>
+
 <form method="post">
     EVENT:
     <select name="evCode">
         <option value="">-- none --</option>
-        <?php while ($e = $events->fetch_assoc()): ?>
-        <option value="<?= $e['evCode'] ?>"><?= $e['evName'] ?> (<?= $e['evCode'] ?>)</option>
+        <?php 
+        $events->data_seek(0);
+        while ($e = $events->fetch_assoc()): ?>
+        <option value="<?= $e['evCode'] ?>"><?= $e['evName'] ?></option>
         <?php endwhile; ?>
     </select><br>
 
     FIRST NAME: <input type="text" name="fName" required><br>
-    LAST NAME : <input type="text" name="lName" required><br>
+    LAST NAME: <input type="text" name="lName" required><br>
     DISCOUNT RATE: <input type="number" step="0.01" name="dRate"><br>
 
     <button type="submit" name="add">Add Participant</button>
@@ -115,8 +116,8 @@ $events = $conn->query("SELECT evCode, evName FROM Events ORDER BY evName ASC");
 <tr>
     <th>ID</th>
     <th>Event</th>
-    <th>First Name</th>
-    <th>Last Name</th>
+    <th>First</th>
+    <th>Last</th>
     <th>Discount</th>
     <th>Actions</th>
 </tr>
@@ -130,7 +131,7 @@ $events = $conn->query("SELECT evCode, evName FROM Events ORDER BY evName ASC");
     <td><?= $row['partDRate'] ?></td>
     <td>
         <a href="?edit=<?= $row['partID'] ?>">Edit</a>
-        <a href="?delete=<?= $row['partID'] ?>" onclick="return confirm('Delete this participant?')">Delete</a>
+        <a href="?delete=<?= $row['partID'] ?>" onclick="return confirm('Delete?')">Delete</a>
     </td>
 </tr>
 <?php endwhile; ?>
